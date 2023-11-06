@@ -9,7 +9,7 @@ import { body, validationResult } from "express-validator";
 const app = express();
 app.use(express.json());
 app.use(cors());
-app.use("/questions", questionRoutes);
+app.use("/", questionRoutes);
 
 const port = process.env.PORT || 5000;
 

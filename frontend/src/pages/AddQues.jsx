@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import BackButton from "../components/BackButton";
 
@@ -36,6 +36,27 @@ const AddQues = () => {
     });
   };
 
+  //this is code from me need to add exams courses
+  const [exams, setExams] = useState([]);
+
+  const handleExamInputChange = (e) => {
+    const { name, value } = e.target;
+    setExams({
+      ...exams,
+      [name]: value,
+    });
+  };
+  useEffect(() => {
+    console.log(exams);
+  }, [exams]);
+
+  const submitExam = () => {
+    axios.post("http://localhost:5000/exams", exams).then((res) => {
+      console.log(res.data);
+      setExams([]);
+      setExams(res.data);
+    });
+  };
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
@@ -55,7 +76,7 @@ const AddQues = () => {
       };
 
       await axios.post("http://localhost:5000/questions", postData);
-      // Redirect to the home page (or any other desired route)
+
       window.location.href = "/";
     } catch (error) {
       console.error(error);
@@ -68,6 +89,52 @@ const AddQues = () => {
       <div className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-lg">
         <h2 className="text-2xl font-bold mb-4">Add a New Question</h2>
         <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-lg font-semibold mb-2" htmlFor="YEAR">
+              YEAR:
+            </label>
+            <input
+              onChange={handleExamInputChange}
+              type="text"
+              id="YEAR"
+              name="year"
+              className="w-full p-2 border rounded"
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-lg font-semibold mb-2" htmlFor="exam">
+              Exam course:
+            </label>
+            <input
+              onChange={handleExamInputChange}
+              type="text"
+              id="exam"
+              name="courseName"
+              className="w-full p-2 border rounded"
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-lg font-semibold mb-2" htmlFor="examt">
+              Exam type:
+            </label>
+            <select
+              name="examType"
+              id="examt"
+              onChange={handleExamInputChange}
+              className="w-full p-2 border rounded"
+            >
+              <option value="MID">MID</option>
+              <option value="FINAL">FINAL</option>
+            </select>
+          </div>
+          <button
+            type="button"
+            className="bg-blue-500 text-white py-2 px-4 rounded-md"
+            onClick={submitExam}
+          >
+            Register exam and go to its questions
+          </button>
           <div className="mb-4">
             <label
               className="block text-lg font-semibold mb-2"
@@ -112,7 +179,7 @@ const AddQues = () => {
                   <div className="mr-2">{String.fromCharCode(65 + index)})</div>
                   <input
                     type="text"
-                    name={`options[${index}]`}
+                    name={`choices[${index}]`}
                     value={option}
                     onChange={(e) => {
                       const updatedOptions = [...questionData.options];

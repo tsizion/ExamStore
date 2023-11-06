@@ -1,13 +1,21 @@
+/* The code is defining a set of routes for a RESTful API using the Express framework in JavaScript. */
 import express, { Router } from "express";
 const router = express.Router();
 import { Question } from "../models/question.js";
+import { Exam } from "../models/exam.js";
 // route for adding a question
-router.post("/", async (req, res) => {
+router.post("/questions", async (req, res) => {
   try {
-    const { questionType, question, options, correctAnswer, isTrue } = req.body;
+    const {
+      examId,
+      question_type,
+      question,
+      choices,
+      correctAnswer,
+      description,
+    } = req.body;
 
-    // Check if the required fields are present
-    if (!questionType || !question) {
+    if (!question_type || !question) {
       return res
         .status(400)
         .json({ error: "questionType and question are required fields" });
@@ -15,24 +23,48 @@ router.post("/", async (req, res) => {
 
     // Create a new question instance based on the extracted data
     const newQuestion = new Question({
-      questionType,
+      examId,
+      question_type,
       question,
-      options,
+      choices,
       correctAnswer,
-      isTrue,
+      description,
     });
 
     // Save the new question to the database
     await newQuestion.save();
-
     res.status(201).json(newQuestion);
   } catch (error) {
     console.log(error.message);
     res.status(500).send({ message: error.message });
   }
 });
+
+router.post("/exams", async (req, res) => {
+  try {
+    const { courseName, examType, year } = req.body;
+
+    if (!courseName || !examType) {
+      return res
+        .status(400)
+        .json({ error: "courseName and examType are required fields" });
+    }
+    const newExam = new Exam({
+      courseName,
+      examType,
+      year,
+    });
+
+    await newExam.save();
+    res.status(201).json(newExam);
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).send({ message: error.message });
+  }
+});
+
 // Create a route to get all questions
-router.get("/", async (req, res) => {
+router.get("/questions", async (req, res) => {
   try {
     // Retrieve all questions from the database
     const questions = await Question.find();
@@ -43,8 +75,22 @@ router.get("/", async (req, res) => {
     res.status(500).send({ message: error.message });
   }
 });
+
+// get all exams
+router.get("/exams", async (req, res) => {
+  try {
+    // Retrieve all questions from the database
+    const exam = await Exam.find();
+
+    res.status(200).json({ count: exam.length, data: exam });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).send({ message: error.message });
+  }
+});
+
 // Create a route to get a question by ID
-router.get("/:questionId", async (req, res) => {
+router.get("/questions/:questionId", async (req, res) => {
   try {
     const questionId = req.params.questionId;
 
@@ -63,7 +109,7 @@ router.get("/:questionId", async (req, res) => {
 });
 
 // Create a route to update a question by ID
-router.put("/:questionId", async (req, res) => {
+router.put("/questions/:questionId", async (req, res) => {
   try {
     const questionId = req.params.questionId;
 
@@ -94,7 +140,7 @@ router.put("/:questionId", async (req, res) => {
 });
 
 // Create a route to delete a question by ID
-router.delete("/:questionId", async (req, res) => {
+router.delete("/questions/:questionId", async (req, res) => {
   try {
     const questionId = req.params.questionId;
 
