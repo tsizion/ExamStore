@@ -1,0 +1,11 @@
+# Dependency directories
+node_modules/
+
+# Logs
+logs/
+
+# Environment variables file (if you use .env)
+.env
+
+# Compiled files (e.g., TypeScript)
+dist/
