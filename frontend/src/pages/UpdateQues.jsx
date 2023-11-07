@@ -4,209 +4,193 @@ import { useParams } from "react-router-dom";
 import BackButton from "../components/BackButton";
 
 const UpdateQues = () => {
-  const { questionId } = useParams();
-  const [questionData, setQuestionData] = useState({
+  const [formData, setFormData] = useState({
+    year: "",
+    courseName: "",
+    examType: "",
     questionType: "",
     question: "",
-    options: [],
-    isTrue: false, // Use isTrue instead of correctAnswer
-    answer: false, // New field for the answer
+    choices: ["", "", ""],
+    correctAnswer: "",
+    description: "",
   });
-  const [updateStatus, setUpdateStatus] = useState(null);
-  const [additionalOption, setAdditionalOption] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const { questionId } = useParams();
 
   useEffect(() => {
-    // Fetch the question data for the given questionId when the component mounts
+    // Fetch the existing question data based on the questionId and populate the formData state
     axios
       .get(`http://localhost:5000/questions/${questionId}`)
       .then((response) => {
-        setQuestionData(response.data);
+        const existingQuestion = response.data; // Replace with your actual API endpoint and data structure
+        setFormData(existingQuestion);
+      })
+      .catch((error) => {
+        setErrorMessage("Error: " + error.message);
       });
   }, [questionId]);
 
-  const handleInputChange = (e) => {
-    const { name, value, type } = e.target;
-    setQuestionData((prevData) => {
-      if (type === "radio") {
-        // Handle radio buttons for "True" and "False"
-        return {
-          ...prevData,
-          [name]: value === "true",
-        };
-      } else {
-        // Handle other input types
-        return {
-          ...prevData,
-          [name]: type === "checkbox" ? e.target.checked : value,
-        };
-      }
-    });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Send a PUT request to update the question with only the changed fields
-    axios
-      .put(`http://localhost:5000/questions/${questionId}`, questionData)
-      .then((response) => {
-        setUpdateStatus("Updated Successfully");
-
-        console.log(response.data);
-        // Handle success, e.g., show a success message or redirect to a different page
-      })
-      .catch((error) => {
-        console.error(error);
-        // Handle the error, e.g., show an error message to the user
-      });
+  const handleChoicesChange = (index, value) => {
+    const newChoices = [...formData.choices];
+    newChoices[index] = value;
+    setFormData({ ...formData, choices: newChoices });
   };
+
   const handleAddOption = () => {
-    if (additionalOption.trim() !== "") {
-      setQuestionData((prevData) => ({
-        ...prevData,
-        options: [...prevData.options, additionalOption],
-      }));
-      setAdditionalOption("");
+    setFormData({ ...formData, choices: [...formData.choices, ""] });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      // Send the updated data to your backend API to update the question
+      const response = await axios.put(
+        `http://localhost:5000/questions/${questionId}`,
+        {
+          year: formData.year,
+          courseName: formData.courseName,
+          examType: formData.examType,
+          questionType: formData.questionType,
+          question: formData.question,
+          choices: formData.choices,
+          correctAnswer: formData.correctAnswer,
+          description: formData.description,
+        }
+      );
+
+      if (response.status !== 200) {
+        throw new Error("Failed to update the question.");
+      }
+
+      setSuccessMessage("Successfully updated the question.");
+    } catch (error) {
+      setErrorMessage("Error: " + error.message);
     }
   };
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
+    <>
       <BackButton />
-      <div className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold mb-4">Update Question</h2>
-        <form onSubmit={handleSubmit}>
+      <div>
+        <h2>Update Question</h2>
+        {successMessage && <p>{successMessage}</p>}
+        {errorMessage && <p>{errorMessage}</p>}
+        <form
+          onSubmit={handleSubmit}
+          className="max-w-md mx-auto mt-8 p-4 bg-white rounded shadow-lg"
+        >
           <div className="mb-4">
-            <label
-              className="block text-lg font-semibold mb-2"
-              htmlFor="questionType"
-            >
-              Question Type:
-            </label>
+            <label className="block text-gray-600">YEAR:</label>
+            <input
+              type="text"
+              name="year"
+              value={formData.year}
+              onChange={handleChange}
+              className="w-full p-2 border rounded"
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-600">Exam course:</label>
+            <input
+              type="text"
+              name="courseName"
+              value={formData.courseName}
+              onChange={handleChange}
+              className="w-full p-2 border rounded"
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-600">Exam type:</label>
             <select
-              name="questionType"
-              id="questionType"
-              value={questionData.questionType}
-              onChange={handleInputChange}
+              name="examType"
+              value={formData.examType}
+              onChange={handleChange}
               className="w-full p-2 border rounded"
             >
-              <option value="choice">Multiple Choice</option>
-              <option value="truefalse">True/False</option>
-              <option value="shortanswer">Short Answer</option>
+              <option value="">Select Exam Type</option>
+              <option value="MID">MID</option>
+              <option value="FINAL">FINAL</option>
             </select>
           </div>
           <div className="mb-4">
-            <label
-              className="block text-lg font-semibold mb-2"
-              htmlFor="question"
-            >
-              Question:
-            </label>
-            <textarea
-              name="question"
-              id="question"
-              value={questionData.question}
-              onChange={handleInputChange}
+            <label className="block text-gray-600">Question Type:</label>
+            <select
+              name="questionType"
+              value={formData.questionType}
+              onChange={handleChange}
               className="w-full p-2 border rounded"
-            ></textarea>
+            >
+              <option value="">Select Question Type</option>
+              <option value="multiple_choice">Multiple Choice</option>
+              <option value="short_answer">Short Answer</option>
+              <option value="blank_space">Blank Space</option>
+            </select>
           </div>
-          {questionData.questionType === "choice" && (
+
+          {formData.questionType === "multiple_choice" && (
             <div className="mb-4">
-              <label className="block text-lg font-semibold mb-2">
-                Choices:
-              </label>
-              {questionData.options.map((option, index) => (
-                <div key={index} className="flex items-center mb-2">
-                  <div className="mr-2">{String.fromCharCode(65 + index)})</div>
-                  <input
-                    type="text"
-                    name={`options[${index}]`}
-                    value={option}
-                    onChange={(e) => {
-                      const updatedOptions = [...questionData.options];
-                      updatedOptions[index] = e.target.value;
-                      setQuestionData({
-                        ...questionData,
-                        options: updatedOptions,
-                      });
-                    }}
-                    className="w-full p-2 border rounded"
-                  />
-                </div>
-              ))}
-              <div className="flex items-center mb-2">
-                <div className="mr-2">
-                  {String.fromCharCode(65 + questionData.options.length)})
-                </div>
+              <label className="block text-gray-600">Choices:</label>
+              {formData.choices.map((choice, index) => (
                 <input
                   type="text"
-                  value={additionalOption}
-                  onChange={(e) => setAdditionalOption(e.target.value)}
+                  key={index}
+                  value={choice}
+                  onChange={(e) => handleChoicesChange(index, e.target.value)}
                   className="w-full p-2 border rounded"
                 />
-              </div>
+              ))}
               <button
                 type="button"
                 onClick={handleAddOption}
-                className="bg-green-500 text-white py-2 px-4 rounded-md"
+                className="mt-2 text-blue-500"
               >
-                Add Option
+                + Add Option
               </button>
             </div>
           )}
-
-          {questionData.questionType === "truefalse" && (
-            <div className="mb-4">
-              <label className="block text-lg font-semibold mb-2">
-                Answer:
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="answer"
-                  value="true"
-                  checked={questionData.answer === true}
-                  onChange={handleInputChange}
-                />
-                True
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="answer"
-                  value="false"
-                  checked={questionData.answer === false}
-                  onChange={handleInputChange}
-                />
-                False
-              </label>
-            </div>
-          )}
-          {questionData.questionType === "shortanswer" && (
-            <div className="mb-4">
-              <label className="block text-lg font-semibold mb-2">
-                Correct Answer:
-              </label>
-              <input
-                type="text"
-                name="correctAnswer"
-                value={questionData.correctAnswer}
-                onChange={handleInputChange}
-                className="w-full p-2 border rounded"
-              />
-            </div>
-          )}
-
+          <div className="mb-4">
+            <label className="block text-gray-600">Question:</label>
+            <textarea
+              name="question"
+              value={formData.question}
+              onChange={handleChange}
+              className="w-full p-2 border rounded"
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-600">Correct Answer:</label>
+            <input
+              type="text"
+              name="correctAnswer"
+              value={formData.correctAnswer}
+              onChange={handleChange}
+              className="w-full p-2 border rounded"
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-600">Description:</label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              className="w-full p-2 border rounded"
+            />
+          </div>
           <button
             type="submit"
-            className="bg-blue-500 text-white py-2 px-4 rounded-md"
+            className="bg-blue-500 text-white p-2 rounded hover-bg-blue-700"
           >
-            {updateStatus === "Updated Successfully"
-              ? "Updated Successfully"
-              : "Update Question"}
+            Add Question
           </button>
         </form>
       </div>
-    </div>
+    </>
   );
 };
 

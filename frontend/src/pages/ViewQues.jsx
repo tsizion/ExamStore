@@ -1,82 +1,91 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import BackButton from "../components/BackButton";
-import Spinner from "../components/Spinner";
 
-const ViewQues = () => {
-  const [question, setQuestion] = useState({});
-  const [loading, setLoading] = useState(false);
+const viewQues = () => {
+  const [question, setQuestion] = useState(null);
+  const [loading, setLoading] = useState(true);
   const { questionId } = useParams();
 
   useEffect(() => {
-    setLoading(true);
-    axios
-      .get(`http://localhost:5000/questions/${questionId}`)
-      .then((response) => {
-        setQuestion(response.data);
+    // Fetch the question details from the backend when the component mounts
+    const fetchQuestion = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:5000/questions/${questionId}`
+        );
+
+        if (response.status === 200) {
+          setQuestion(response.data);
+          setLoading(false);
+        } else {
+          // Handle error or not found
+          console.error("Failed to fetch question");
+        }
+      } catch (error) {
+        console.error("Error: " + error.message);
         setLoading(false);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  }, []);
+      }
+    };
+
+    fetchQuestion();
+  }, [questionId]);
+
+  if (loading) {
+    return <p className="text-center mt-4">Loading...</p>;
+  }
+
+  if (!question) {
+    return <p className="text-center mt-4">Question not found.</p>;
+  }
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
-      <div className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-lg">
-        <BackButton />
-        {loading ? (
-          <div className="text-center">
-            <Spinner />
-          </div>
-        ) : (
-          <div>
-            <h2 className="text-2xl font-bold mb-4">Question Details</h2>
-            <div className="mb-4">
-              <p className="text-lg font-semibold">Question:</p>
-              <p className="text-gray-700">{question.question}</p>
+    <>
+      <BackButton />
+      <div className="max-w-md mx-auto mt-8 p-4 bg-white rounded shadow-lg">
+        <h2 className="text-2xl font-semibold mb-4">Question Details</h2>
+        <div className="mb-2">
+          <p>
+            <span className="font-semibold">Year:</span> {question.year}
+          </p>
+          <p>
+            <span className="font-semibold">Exam Course:</span>{" "}
+            {question.examCourse}
+          </p>
+          <p>
+            <span className="font-semibold">Exam Type:</span>{" "}
+            {question.examType}
+          </p>
+          <p>
+            <span className="font-semibold">Question Type:</span>{" "}
+            {question.questionType}
+          </p>
+          <p>
+            <span className="font-semibold">Question:</span> {question.question}
+          </p>
+          {question.questionType === "Multiple Choice" && (
+            <div className="mb-2">
+              <p className="font-semibold">Choices:</p>
+              <ul>
+                {question.choices.map((choice, index) => (
+                  <li key={index}>{choice}</li>
+                ))}
+              </ul>
+              <p>
+                <span className="font-semibold">Correct Answer:</span>{" "}
+                {question.correctAnswer}
+              </p>
             </div>
-            <div className="mb-4">
-              <p className="text-lg font-semibold">Question Type:</p>
-              <p className="text-gray-700">{question.questionType}</p>
-            </div>
-            {question.questionType === "choice" && (
-              <div className="mb-4">
-                <p className="text-lg font-semibold">Options:</p>
-                <ul className="list-disc ml-6">
-                  {question.options.map((option, index) => (
-                    <li
-                      key={index}
-                      className="text-gray-700 list-none list-inside"
-                    >
-                      {String.fromCharCode(65 + index)} ) {option}
-                    </li>
-                  ))}
-                </ul>
-                <p className="text-lg font-semibold">Correct Answer:</p>
-                <p className="text-gray-700">{question.correctAnswer}</p>
-              </div>
-            )}
-            {question.questionType === "truefalse" && (
-              <div className="mb-4">
-                <p className="text-lg font-semibold">Is True:</p>
-                <p className="text-gray-700">
-                  {question.isTrue ? "Yes" : "No"}
-                </p>
-              </div>
-            )}
-            {question.questionType === "shortanswer" && (
-              <div className="mb-4">
-                <p className="text-lg font-semibold">Correct Answer:</p>
-                <p className="text-gray-700">{question.correctAnswer}</p>
-              </div>
-            )}
-          </div>
-        )}
+          )}
+          <p>
+            <span className="font-semibold">Description:</span>{" "}
+            {question.description}
+          </p>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
-export default ViewQues;
+export default viewQues;
