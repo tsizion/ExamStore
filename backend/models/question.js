@@ -22,4 +22,6 @@ const questionSchema = new mongoose.Schema({
   description: String,
 });
 
+questionSchema.index({ question: 1,  examId: 1 }, { unique: true });
+
 export const Question = mongoose.model("Question", questionSchema);
