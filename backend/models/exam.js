@@ -3,6 +3,7 @@ const examSchema = new mongoose.Schema({
   courseName: {
     type: String,
     required: true,
+    lowerCase:true
   },
   examType: {
     type: String,
