@@ -39,36 +39,6 @@ router.post("/questions", async (req, res) => {
     res.status(500).send({ message: error.message });
   }
 });
-function updateThis(query) {
-  const getRes = query.map((element) => element.choices);
-  let index = 0;
-  let modifiedArrays = [];
-
-  for (const innerArray of getRes) {
-    // Print or process each element in the inner array
-    // console.log(innerArray);
-
-    const res = innerArray.map((element) => {
-      // Apply the modification only from the 7th element onward
-      if (index >= 7) {
-        return element.split(".")[1];
-      } else {
-        return element;
-      }
-    });
-
-    index++;
-    modifiedArrays.push(res);
-  }
-  return modifiedArrays;
-}
-
-router.patch("/update/:id", async (req, res) => {
-  const examId = req.params.id;
-  const question = await Question.find({ examId });
-  updateThis(question);
-  const upd = await Question.findOneAndUpdate({ examId: examId }, {$set:});
-});
 
 router.post("/exams", async (req, res) => {
   try {
