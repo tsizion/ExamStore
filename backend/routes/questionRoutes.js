@@ -89,18 +89,18 @@ router.get("/exams", async (req, res) => {
 });
 
 // Create a route to get a question by ID
-router.get("/questions/:questionId", async (req, res) => {
+router.get("/questions/:question", async (req, res) => {
   try {
-    const questionId = req.params.questionId;
+    const questionId = req.params.question;
 
     // Retrieve the question by its ID from the database
-    const question = await Question.findById(questionId);
+    const newQuestion = await Question.findOne({ question: questionId });
 
-    if (!question) {
+    if (!newQuestion) {
       return res.status(404).json({ message: "Question not found" });
     }
 
-    res.status(200).json(question);
+    res.status(200).json(newQuestion);
   } catch (error) {
     console.log(error.message);
     res.status(500).send({ message: error.message });
@@ -120,11 +120,11 @@ router.put("/questions/:questionId", async (req, res) => {
     }
 
     // Update the question with the data from the request body
-    question.questionType = req.body.questionType || question.questionType;
+    question.question_type = req.body.question_type || question.question_type;
     question.question = req.body.question || question.question;
     question.options = req.body.options || question.options;
     question.correctAnswer = req.body.correctAnswer || question.correctAnswer;
-    question.isTrue = req.body.isTrue || question.isTrue;
+    question.description = req.body.description || question.description;
 
     // Save the updated question to the database
     const updatedQuestion = await question.save();
